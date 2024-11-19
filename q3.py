@@ -1,4 +1,4 @@
-# Authors : Sankalp Mittal (395001), Tamar Alphaidze (393635)
+# Authors : Sankalp Mittal (395001), 
 
 import math
 import sympy
@@ -34,7 +34,7 @@ def get_rand_vector(set_of_vals, m):
 def mod_matrix_inv(matrix, prime):
     n = len(matrix)
     inv_matrix = np.zeros((n,n))
-    # TODO : Write the function since the smypy one is not working
+
     det_K = np.linalg.det(matrix).round()
     det_K_mod = int(((det_K%prime)+prime)%prime)
     # print(det_K)
@@ -59,7 +59,7 @@ def main():
     max_wt = max(t, c)
     min_siz = max(max_wt * n + 1, n * n)
     prime = next_prime(min_siz+1)
-    # print(prime)
+
     set_of_vals = list(range(prime))
 
     num_runs = math.ceil(math.log(n))
@@ -68,24 +68,15 @@ def main():
         alpha = [[get_rand_val(set_of_vals[1:]) for _ in range(n)] for _ in range(n)]
         gammas = get_rand_vector(set_of_vals[1:], n * max_wt + 1) # Sliced to prevent 0
 
-        # #Testing
-        # alpha = [[0,5,0],[9,7,1],[2,7,1]]
-        # gammas = [2,1,6,8,4,10,9,5,7,3]
-        # #Test end
-
-        # print(alpha)
-        # print(gammas)
-
         y = sympy.symbols('y')
         H_matrix = [[0]*n for _ in range(n)]
         for i in range(n):
             for j in range(n):
                 if weights[i][j] != -1:
                     H_matrix[i][j] = alpha[i][j] * (y**weights[i][j])
-        # print(H_matrix)
+
         H_matrix = sympy.Matrix(H_matrix)
         H_det = H_matrix.det()
-        # print(H_det)
 
         r_vals = []
         for gam in gammas:
@@ -95,24 +86,15 @@ def main():
         for i in range(len(gammas)):
             for j in range(len(gammas)):
                 P_matrix[j][i] = pow(gammas[j], i,prime)
-        # print(P_matrix)
 
 
         P_inv = mod_matrix_inv(P_matrix, prime)
-        # print(P_inv)
-
-        # should_be_identity = P_inv @ P_matrix
-        # for i in range(len(should_be_identity)):
-        #     for j in range(len(should_be_identity[i])):
-        #         should_be_identity[i][j] = should_be_identity[i][j]%prime
-        # print(should_be_identity)
 
         c = P_inv.dot(s_vector)
         for i in range(len(c)):
             c[i] = c[i]%prime
-        # print(c)
+
         if c[b] != 0:
-            # print(c[b])
             print("yes")
             isTrue = True
             break
