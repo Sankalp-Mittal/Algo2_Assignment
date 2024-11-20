@@ -150,7 +150,7 @@ def solver(weights, n, m, b, t, c):
         alpha = [[random.choice(set_of_vals[1:]) for _ in range(n)] for _ in range(n)]
         gammas = random.sample(set_of_vals[1:], n * max_wt + 1)
 
-        r_vals = [hdet(gamma, alpha, weights, n) % prime for gamma in gammafs]
+        r_vals = [hdet(gamma, alpha, weights, n) % prime for gamma in gammas]
 
         P_matrix = get_P(r_vals, gammas, prime)
 
