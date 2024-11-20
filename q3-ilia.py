@@ -84,11 +84,13 @@ def solve(A, b,prime):
 
         # Eliminate entries below the pivot
         for j in range(i + 1, n):
-            factor = (A[j][i] * pow(A[i][i],-1,prime))%prime
+            factor = round((A[j][i] * pow(A[i][i],-1,prime))) %prime
             for k in range(i, n):
                 A[j][k] -= factor * A[i][k]
+                A[j][k] %= prime
                 A[j][k] = (A[j][k]+prime)%prime
             b[j] -= factor * b[i]
+            b[j] %= prime
             b[j] = (b[j]+prime)%prime
 
     # Back substitution: Solve for x in Ux = c
@@ -97,8 +99,9 @@ def solve(A, b,prime):
         x[i] = b[i]
         for j in range(i + 1, n):
             x[i] -= A[i][j] * x[j]
+            x[i] %= prime
             x[i] = (x[i]+prime)%prime
-        x[i] = (x[i] * pow(A[i][i],-1,prime))%prime
+        x[i] = round((x[i] * pow(A[i][i],-1,prime)))%prime
 
     return x
 
@@ -152,13 +155,14 @@ def solver(weights, n, m, b, t, c):
     for _ in range(num_runs):
         alpha = [[random.choice(set_of_vals[1:]) for _ in range(n)] for _ in range(n)]
         gammas = random.sample(set_of_vals[1:], n * max_wt + 1)
+        # print(gammas)
 
         r_vals = [hdet(gamma, alpha, weights, n) % prime for gamma in gammas]
 
         P_matrix = get_P(r_vals, gammas, prime)
 
         c = solve(P_matrix, r_vals,prime)
-        print(c)
+        # print(c)
 
         if c[b] % prime != 0:
             print("yes")
