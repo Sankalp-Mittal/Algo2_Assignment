@@ -52,7 +52,7 @@ def determinant(matrix):
     return det
 
 
-def solve(A, b):
+def solve(A, b,prime):
     """
     Solves the system of linear equations A * x = b using Gaussian elimination.
 
@@ -84,10 +84,12 @@ def solve(A, b):
 
         # Eliminate entries below the pivot
         for j in range(i + 1, n):
-            factor = A[j][i] / A[i][i]
+            factor = (A[j][i] * pow(A[i][i],-1,prime))%prime
             for k in range(i, n):
                 A[j][k] -= factor * A[i][k]
+                A[j][k] = (A[j][k]+prime)%prime
             b[j] -= factor * b[i]
+            b[j] = (b[j]+prime)%prime
 
     # Back substitution: Solve for x in Ux = c
     x = [0] * n
@@ -95,7 +97,8 @@ def solve(A, b):
         x[i] = b[i]
         for j in range(i + 1, n):
             x[i] -= A[i][j] * x[j]
-        x[i] /= A[i][i]
+            x[i] = (x[i]+prime)%prime
+        x[i] = (x[i] * pow(A[i][i],-1,prime))%prime
 
     return x
 
@@ -154,7 +157,8 @@ def solver(weights, n, m, b, t, c):
 
         P_matrix = get_P(r_vals, gammas, prime)
 
-        c = solve(P_matrix, r_vals)
+        c = solve(P_matrix, r_vals,prime)
+        print(c)
 
         if c[b] % prime != 0:
             print("yes")
