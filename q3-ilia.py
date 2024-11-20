@@ -1,3 +1,6 @@
+# Authors : Sankalp Mittal (395001), Ilia Badanin (350775), Vasco Frazão (396229)
+
+
 import math
 import random
 
@@ -97,7 +100,22 @@ def solve(A, b):
     return x
 
 
-# Use eratosthenes sieve
+def isPrime(n):
+    if n <= 1:
+        return False
+    if n <= 3:
+        return True
+    if n % 2 == 0 or n % 3 == 0:
+        return False
+    i = 5
+    while i * i <= n:
+        if n % i == 0 or n % (i + 2) == 0:
+            return False
+        i += 6
+    return True
+
+
+# fine unless we have prime over p_{20'000}
 def next_prime(n):
     while True:
         if isPrime(n):
@@ -105,7 +123,7 @@ def next_prime(n):
         n += 1
 
 
-def hdet(gamma, alpha, weights):
+def hdet(gamma, alpha, weights, n):
     H_matrix = [
         [
             alpha[i][j] * (gamma ** weights[i][j]) * (weights[i][j] != -1)
@@ -113,7 +131,7 @@ def hdet(gamma, alpha, weights):
         ]
         for i in range(n)
     ]
-    return determinant(H_matrix) % prime
+    return determinant(H_matrix)
 
 
 def get_P(r_vals, gammas, prime):
@@ -132,7 +150,7 @@ def solver(weights, n, m, b, t, c):
         alpha = [[random.choice(set_of_vals[1:]) for _ in range(n)] for _ in range(n)]
         gammas = random.sample(set_of_vals[1:], n * max_wt + 1)
 
-        r_vals = [hdet(gamma, alpha, weights) % prime for gamma in gammas]
+        r_vals = [hdet(gamma, alpha, weights, n) % prime for gamma in gammafs]
 
         P_matrix = get_P(r_vals, gammas, prime)
 
@@ -153,3 +171,7 @@ def main():
         u, v, w = map(int, input().split())
         weights[u][v] = w
     return solver(weights, n, m, b, t, c)
+
+
+if __name__ == "__main__":
+    main()
