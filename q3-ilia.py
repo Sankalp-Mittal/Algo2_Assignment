@@ -5,52 +5,51 @@ import math
 import random
 
 
-def determinant(matrix, prime):
+def determinant_mod(matrix, prime):
     """
-    Gaussian elimination with improved handling of zero pivots and numerical stability.
-    Returns the correct determinant.
+    Gaussian elimination with modular arithmetic to compute the determinant.
+    All calculations are performed modulo `prime`.
     """
     # Get the size of the matrix
     n = len(matrix)
 
     # Create a copy of the matrix to avoid mutating the input
-    mat = [row[:] for row in matrix]
+    mat = [[element % prime for element in row] for row in matrix]
 
     # Initialize determinant as 1
     det = 1
-    epsilon = 1e-10  # Threshold for numerical stability
 
     for i in range(n):
         # Find pivot for column i
         pivot = i
         for j in range(i + 1, n):
-            if abs(mat[j][i]) > abs(mat[pivot][i]):
+            if mat[j][i] > mat[pivot][i]:
                 pivot = j
 
         # If pivot is zero, determinant is zero
-        if abs(mat[pivot][i]) < epsilon:  # Check for very small pivots
+        if mat[pivot][i] == 0:
             return 0
 
         # Swap rows if needed
         if pivot != i:
             mat[i], mat[pivot] = mat[pivot], mat[i]
-            det *= -1  # Swapping rows flips the sign of the determinant
+            det = (-det) % prime  # Swapping rows flips the sign of the determinant
 
         # Multiply determinant by the pivot element
-        det *= mat[i][i]
+        det = (det * mat[i][i]) % prime
 
-        # Normalize row i (avoid division by zero)
-        if abs(mat[i][i]) > epsilon:  # Ensure it's not a very small value
-            for j in range(i + 1, n):
-                mat[i][j] /= mat[i][i]
+        # Normalize row i (modular division by mat[i][i])
+        inv = pow(mat[i][i], -1, prime)  # Modular inverse of the pivot
+        for j in range(i, n):
+            mat[i][j] = (mat[i][j] * inv) % prime
 
         # Eliminate column i for rows below
         for j in range(i + 1, n):
-            if abs(mat[j][i]) > epsilon:  # Skip rows where the element is too small
-                for k in range(i + 1, n):
-                    mat[j][k] -= (mat[j][i] * mat[i][k] ) % prime
+            factor = mat[j][i]
+            for k in range(i, n):
+                mat[j][k] = (mat[j][k] - factor * mat[i][k]) % prime
 
-    return round(det)
+    return det
 
 
 def linsolve(A, b, prime):
@@ -81,14 +80,14 @@ def linsolve(A, b, prime):
             A[i], A[pivot] = A[pivot], A[i]
             b[i], b[pivot] = b[pivot], b[i]
 
-        # Ensure the pivot is non-zero
+        # Ensure the pivot is non-zero modulo prime
         if A[i][i] % prime == 0:
             raise ValueError("Matrix is singular or not invertible modulo prime.")
 
         # Eliminate entries below the pivot
         for j in range(i + 1, n):
             # Compute the factor to zero out A[j][i]
-            factor = (A[j][i] * pow(A[i][i], -1, prime)) % prime
+            factor = (A[j][i] * pow(A[i][i], -1, prime)) % prime  # Modular division
             for k in range(i, n):
                 A[j][k] = (A[j][k] - factor * A[i][k]) % prime
             b[j] = (b[j] - factor * b[i]) % prime
@@ -99,7 +98,7 @@ def linsolve(A, b, prime):
         x[i] = b[i]
         for j in range(i + 1, n):
             x[i] = (x[i] - A[i][j] * x[j]) % prime
-        x[i] = (x[i] * pow(A[i][i], -1, prime)) % prime
+        x[i] = (x[i] * pow(A[i][i], -1, prime)) % prime  # Modular division
 
     return x
 
@@ -130,16 +129,19 @@ def next_prime(n):
 def hdet(gamma, alpha, weights, n, prime):
     H_matrix = [
         [
-            alpha[i][j] * (gamma ** weights[i][j]) * (weights[i][j] != -1)
+            (alpha[i][j] * pow(gamma, weights[i][j], prime)) % prime
+            if weights[i][j] != -1 else 0
             for j in range(n)
         ]
         for i in range(n)
     ]
-    return determinant(H_matrix, prime)
+    return determinant_mod(H_matrix, prime)
 
 
 def get_P(r_vals, gammas, prime):
-    return [[pow(g, i, prime) for i in range(len(gammas))] for g in gammas]
+    # return [[pow(g, i, prime) for i in range(len(gammas))] for g in gammas]
+    return [[pow(g % prime, i, prime) for i in range(len(gammas))] for g in gammas]
+
 
 
 def solver(weights, n, m, b, t, c):
@@ -155,11 +157,13 @@ def solver(weights, n, m, b, t, c):
         gammas = random.sample(set_of_vals[1:], n * max_wt + 1)
         # print(gammas)
 
-        r_vals = [hdet(gamma, alpha, weights, n, prime) % prime for gamma in gammas]
+        r_vals = [hdet(gamma, alpha, weights, n, prime) for gamma in gammas]
 
         P_matrix = get_P(r_vals, gammas, prime)
 
         c = linsolve(P_matrix, r_vals,prime)    
+
+        # print(c)
 
         if c[b] % prime != 0:
             print("yes")
@@ -174,7 +178,7 @@ def main():
     weights = [[-1] * n for _ in range(n)]
     for _ in range(m):
         u, v, w = map(int, input().split())
-        weights[u][v] = w
+        weights[u][v] = 0 if w == c else 1
     return solver(weights, n, m, b, t, c)
 
 
