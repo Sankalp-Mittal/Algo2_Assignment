@@ -15,7 +15,11 @@ def determinant(matrix, prime):
 
     # Create a copy of the matrix to avoid mutating the input
     mat = [row[:] for row in matrix]
-
+    for i in range(n):
+        for j in range(n):
+            mat[i][j] = mat[i][j] % prime
+            mat[i][j] = (mat[i][j] + prime) % prime
+            mat[i][j] = round(mat[i][j])
     # Initialize determinant as 1
     det = 1
     epsilon = 1e-10  # Threshold for numerical stability
@@ -49,9 +53,10 @@ def determinant(matrix, prime):
         # Normalize row i (avoid division by zero)
         # print(mat[i][i])
         if abs(mat[i][i]) > epsilon:  # Ensure it's not a very small value
+            inv = pow(mat[i][i], -1, prime)  # Modular inverse of the pivot
             for j in range(i + 1, n):
-                mat[i][j] = mat[i][j] * pow(mat[i][i],-1,prime)
-                mat[i][j] %= prime
+                mat[i][j] = (mat[i][j] * inv)%prime
+                mat[i][j] = (mat[i][j] + prime) % prime
 
         # Eliminate column i for rows below
         for j in range(i + 1, n):
