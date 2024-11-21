@@ -5,12 +5,10 @@ import math
 import random
 
 
-def determinant(matrix):
+def determinant(matrix, prime):
     """
-    37.3ms vs 1.26ms (np.linalg.det) for 100x100
-    Gaussian elimination O(n^3), almost the same as LU-decomposition by time
-    Returns correct determinant
-    might have an overflow, but it happens only for 1000x1000 matrices
+    Gaussian elimination with improved handling of zero pivots and numerical stability.
+    Returns the correct determinant.
     """
     # Get the size of the matrix
     n = len(matrix)
@@ -20,6 +18,7 @@ def determinant(matrix):
 
     # Initialize determinant as 1
     det = 1
+    epsilon = 1e-10  # Threshold for numerical stability
 
     for i in range(n):
         # Find pivot for column i
@@ -29,7 +28,7 @@ def determinant(matrix):
                 pivot = j
 
         # If pivot is zero, determinant is zero
-        if mat[pivot][i] == 0:
+        if abs(mat[pivot][i]) < epsilon:  # Check for very small pivots
             return 0
 
         # Swap rows if needed
@@ -40,68 +39,67 @@ def determinant(matrix):
         # Multiply determinant by the pivot element
         det *= mat[i][i]
 
-        # Normalize row i
-        for j in range(i + 1, n):
-            mat[i][j] /= mat[i][i]
+        # Normalize row i (avoid division by zero)
+        if abs(mat[i][i]) > epsilon:  # Ensure it's not a very small value
+            for j in range(i + 1, n):
+                mat[i][j] /= mat[i][i]
 
         # Eliminate column i for rows below
         for j in range(i + 1, n):
-            for k in range(i + 1, n):
-                mat[j][k] -= mat[j][i] * mat[i][k]
+            if abs(mat[j][i]) > epsilon:  # Skip rows where the element is too small
+                for k in range(i + 1, n):
+                    mat[j][k] -= (mat[j][i] * mat[i][k] ) % prime
 
-    return det
+    return round(det)
 
 
-def solve(A, b,prime):
+def linsolve(A, b, prime):
     """
-    Solves the system of linear equations A * x = b using Gaussian elimination.
+    Solves the system of linear equations A * x = b using Gaussian elimination
+    modulo a prime number.
 
     Parameters:
     A (list of lists): Coefficient matrix (n x n).
     b (list): Right-hand side vector (n).
+    prime (int): A prime number for modulo operations.
 
     Returns:
     list: Solution vector x (n).
     """
     n = len(A)
 
-    # Forward elimination: Reduce to upper triangular form
+    # Forward elimination: Reduce A to upper triangular form
     for i in range(n):
-        # Find the pivot
+        # Find the pivot row
         pivot = i
         for j in range(i + 1, n):
             if abs(A[j][i]) > abs(A[pivot][i]):
                 pivot = j
 
-        # Swap rows in A and b
+        # Swap rows in A and b if pivot changes
         if pivot != i:
             A[i], A[pivot] = A[pivot], A[i]
             b[i], b[pivot] = b[pivot], b[i]
 
-        # Check for singular matrix
-        if A[i][i] == 0:
-            raise ValueError("Matrix is singular or nearly singular.")
+        # Ensure the pivot is non-zero
+        if A[i][i] % prime == 0:
+            raise ValueError("Matrix is singular or not invertible modulo prime.")
 
         # Eliminate entries below the pivot
         for j in range(i + 1, n):
-            factor = round((A[j][i] * pow(A[i][i],-1,prime))) %prime
+            # Compute the factor to zero out A[j][i]
+            factor = (A[j][i] * pow(A[i][i], -1, prime)) % prime
             for k in range(i, n):
-                A[j][k] -= factor * A[i][k]
-                A[j][k] %= prime
-                A[j][k] = (A[j][k]+prime)%prime
-            b[j] -= factor * b[i]
-            b[j] %= prime
-            b[j] = (b[j]+prime)%prime
+                A[j][k] = (A[j][k] - factor * A[i][k]) % prime
+            b[j] = (b[j] - factor * b[i]) % prime
 
     # Back substitution: Solve for x in Ux = c
     x = [0] * n
     for i in range(n - 1, -1, -1):
         x[i] = b[i]
         for j in range(i + 1, n):
-            x[i] -= A[i][j] * x[j]
-            x[i] %= prime
-            x[i] = (x[i]+prime)%prime
-        x[i] = round((x[i] * pow(A[i][i],-1,prime)))%prime
+            x[i] = (x[i] - A[i][j] * x[j]) % prime
+        x[i] = (x[i] * pow(A[i][i], -1, prime)) % prime
 
     return x
 
@@ -129,7 +127,7 @@ def next_prime(n):
         n += 1
 
 
-def hdet(gamma, alpha, weights, n):
+def hdet(gamma, alpha, weights, n, prime):
     H_matrix = [
         [
             alpha[i][j] * (gamma ** weights[i][j]) * (weights[i][j] != -1)
@@ -137,7 +135,7 @@ def hdet(gamma, alpha, weights, n):
         ]
         for i in range(n)
     ]
-    return determinant(H_matrix)
+    return determinant(H_matrix, prime)
 
 
 def get_P(r_vals, gammas, prime):
@@ -157,17 +155,16 @@ def solver(weights, n, m, b, t, c):
         gammas = random.sample(set_of_vals[1:], n * max_wt + 1)
         # print(gammas)
 
-        r_vals = [hdet(gamma, alpha, weights, n) % prime for gamma in gammas]
+        r_vals = [hdet(gamma, alpha, weights, n, prime) % prime for gamma in gammas]
 
         P_matrix = get_P(r_vals, gammas, prime)
 
-        c = solve(P_matrix, r_vals,prime)
-        # print(c)
+        c = linsolve(P_matrix, r_vals,prime)    
 
         if c[b] % prime != 0:
             print("yes")
             return 0
-
+        
     print("no")
     return 0
 
