@@ -24,7 +24,7 @@ for t in tests/*.test; do
 
     echo -e "${GREEN}Running Test: $t${NC}"
     echo -e "${RED}Program output:${NC}"
-    python3 "$1" < "$t"
+    pypy3 "$1" < "$t"
     echo -e "${GREEN}Expected output:${NC}"
     cat "$a"
     echo  # Print an empty line for clarity

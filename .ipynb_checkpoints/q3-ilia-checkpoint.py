@@ -145,35 +145,45 @@ def get_P(r_vals, gammas, prime):
 
 
 def solver(weights, n, m, b, t, c):
-    max_wt = max(t, c)
+    # max_wt = max(t, c)
+    max_wt = 1
     min_siz = max(max_wt * n + 1, n * n)
     prime = next_prime(min_siz + 1)
 
     set_of_vals = list(range(prime))
 
-    num_runs = math.ceil(math.log(n))
+    num_runs = math.ceil(math.log(n)) + 1
     for _ in range(num_runs):
         alpha = [[random.choice(set_of_vals[1:]) for _ in range(n)] for _ in range(n)]
         gammas = random.sample(set_of_vals[1:], n * max_wt + 1)
         # print(gammas)
 
-        r_vals = [hdet(gamma, alpha, weights, n, prime) for gamma in gammas]
+        r_vals = [hdet(gamma, alpha, weights, n, prime) % prime for gamma in gammas]
 
         P_matrix = get_P(r_vals, gammas, prime)
 
-        c = linsolve(P_matrix, r_vals,prime)    
+        x = linsolve(P_matrix, r_vals,prime)
+        for i in range(len(x)):
+            x[i] = x[i] % prime 
+        # print(x)
 
-        # print(c)
+        for power in range(len(x)):
+            if x[power]!=0:
+                val = power*c + (n-power)*t
+                if val == b:
+                    print("yes")
+                    return 0
 
-        if c[b] % prime != 0:
-            print("yes")
-            return 0
+        # if x[b] % prime != 0:
+        #     print("yes")
+        #     return 0
         
     print("no")
     return 0
-
+    
 
 def main():
+    # c < t
     n, m, b, t, c = map(int, input().split())
     weights = [[-1] * n for _ in range(n)]
     for _ in range(m):

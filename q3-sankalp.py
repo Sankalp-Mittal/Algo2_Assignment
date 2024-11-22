@@ -18,57 +18,43 @@ def determinant(matrix, prime):
     for i in range(n):
         for j in range(n):
             mat[i][j] = mat[i][j] % prime
-            mat[i][j] = (mat[i][j] + prime) % prime
-            mat[i][j] = round(mat[i][j])
+            
     # Initialize determinant as 1
     det = 1
-    epsilon = 1e-10  # Threshold for numerical stability
 
     for i in range(n):
         # Find pivot for column i
         pivot = i
         for j in range(i + 1, n):
-            if abs(mat[j][i]) > abs(mat[pivot][i]):
+            if mat[j][i] > mat[pivot][i]:
                 pivot = j
 
         # If pivot is zero, determinant is zero
-        if abs(mat[pivot][i]) < epsilon:  # Check for very small pivots
+        if mat[pivot][i] == 0:  # Check for very small pivots
             return 0
 
         # Swap rows if needed
         if pivot != i:
             mat[i], mat[pivot] = mat[pivot], mat[i]
-            det *= -1  # Swapping rows flips the sign of the determinant
-            det = (det + prime) % prime # Field
+            det = -det % prime  # Swapping rows flips the sign of the determinant
 
         # Multiply determinant by the pivot element
-        mat[i][i] %= prime
-        mat[i][i] = (mat[i][i] + prime) % prime # Field
-        mat[i][i] = round(mat[i][i])
-        det *= mat[i][i]
-        det %= prime # Field
-        det = (det + prime) % prime # Field
-        det = round(det)
+        mat[i][i] = mat[i][i] % prime # Field
+        det = det*mat[i][i] % prime
 
         # Normalize row i (avoid division by zero)
-        # print(mat[i][i])
-        if abs(mat[i][i]) > epsilon:  # Ensure it's not a very small value
+        if mat[i][i]:  # Ensure it's not a very small value
             inv = pow(mat[i][i], -1, prime)  # Modular inverse of the pivot
             for j in range(i + 1, n):
                 mat[i][j] = (mat[i][j] * inv)%prime
-                mat[i][j] = (mat[i][j] + prime) % prime
 
         # Eliminate column i for rows below
         for j in range(i + 1, n):
-            if abs(mat[j][i]) > epsilon:  # Skip rows where the element is too small
+            if mat[j][i]:  # Skip rows where the element is too small
                 for k in range(i + 1, n):
-                    mat[j][k] -= (mat[j][i] * mat[i][k] ) % prime
-                    mat[j][k] %= prime
-                    mat[j][k] = (mat[j][k] + prime) % prime
+                    mat[j][k] = (mat[j][k] - (mat[j][i] * mat[i][k])) % prime
 
-    det = det % prime
-    det = (det + prime) % prime
-    return round(det)
+    return det
 
 
 def linsolve(A, b, prime):
@@ -91,7 +77,7 @@ def linsolve(A, b, prime):
         # Find the pivot row
         pivot = i
         for j in range(i + 1, n):
-            if abs(A[j][i]) > abs(A[pivot][i]):
+            if A[j][i] > A[pivot][i]:
                 pivot = j
 
         # Swap rows in A and b if pivot changes
@@ -148,7 +134,7 @@ def next_prime(n):
 def hdet(gamma, alpha, weights, n, prime):
     H_matrix = [
         [
-            alpha[i][j] * (gamma ** weights[i][j]) * (weights[i][j] != -1)
+            (alpha[i][j] * pow(gamma, weights[i][j], prime) * (weights[i][j] != -1)) % prime
             for j in range(n)
         ]
         for i in range(n)
@@ -161,11 +147,9 @@ def get_P(r_vals, gammas, prime):
 
 
 def solver(weights, n, m, b, t, c):
-    # max_wt = max(t, c)
     max_wt = 1
     min_siz = max(max_wt * n + 1, n * n)
     prime = next_prime(min_siz + 1)
-    # print(prime)
 
     set_of_vals = list(range(prime))
 
@@ -173,27 +157,18 @@ def solver(weights, n, m, b, t, c):
     for _ in range(num_runs):
         alpha = [[random.choice(set_of_vals[1:]) for _ in range(n)] for _ in range(n)]
         gammas = random.sample(set_of_vals[1:], n * max_wt + 1)
-        # print(gammas)
 
-        r_vals = [hdet(gamma, alpha, weights, n, prime) % prime for gamma in gammas]
+        r_vals = [hdet(gamma, alpha, weights, n, prime) for gamma in gammas]
 
         P_matrix = get_P(r_vals, gammas, prime)
 
         x = linsolve(P_matrix, r_vals,prime)
-        for i in range(len(x)):
-            x[i] = x[i] % prime 
-        # print(x)
 
         for power in range(len(x)):
-            if x[power]!=0:
-                val = power*c + (n-power)*t
-                if val == b:
+            if x[power]:
+                if b == power*c + (n-power)*t:
                     print("yes")
                     return 0
-
-        # if x[b] % prime != 0:
-        #     print("yes")
-        #     return 0
         
     print("no")
     return 0
@@ -204,10 +179,7 @@ def main():
     weights = [[-1] * n for _ in range(n)]
     for _ in range(m):
         u, v, w = map(int, input().split())
-        if w == c:
-            weights[u][v] = 1
-        else:
-            weights[u][v] = 0
+        weights[u][v] = 1 if w == c else 0
     return solver(weights, n, m, b, t, c)
 
 
