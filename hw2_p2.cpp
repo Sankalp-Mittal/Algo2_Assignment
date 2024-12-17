@@ -291,13 +291,22 @@ int main()
                 }
             }
             vector<int> query_ans;
-            query_ans = ds.query(u[0]);
-            int j_star=0;
-            while(query_ans[0]!=-1){
-                j_star++;
-                query_ans = ds.query(u[j_star]);
-            }
+            // query_ans = ds.query(u[0]);
+            // int j_star=0;
+            // while(query_ans[0]!=-1){
+            //     j_star++;
+            //     query_ans = ds.query(u[j_star]);
+            // }
 
+            int l=0,r=w;
+            int j_star;
+            while(l<=r){
+                j_star = l + (r-l)/2;
+                query_ans = ds.query(u[j_star]);
+                if(query_ans[0]==-1) r=j_star-1;
+                else l=j_star+1;
+            }
+            
             // cout<<j_star<<endl;
             q[leftOvers[j_star]] = 1 - q[leftOvers[j_star]];
             dist++;
