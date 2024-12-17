@@ -298,13 +298,17 @@ int main()
             //     query_ans = ds.query(u[j_star]);
             // }
 
-            int l=0,r=w;
-            int j_star;
+            int l=0,r=w-1;
+            int mid;
+            int j_star=-1;
             while(l<=r){
-                j_star = l + (r-l)/2;
-                query_ans = ds.query(u[j_star]);
-                if(query_ans[0]==-1) r=j_star-1;
-                else l=j_star+1;
+                mid = l + (r-l)/2;
+                query_ans = ds.query(u[mid]);
+                if(query_ans[0]==-1){
+                    r=mid-1;
+                    j_star = mid;
+                }
+                else l=mid+1;
             }
             
             // cout<<j_star<<endl;
