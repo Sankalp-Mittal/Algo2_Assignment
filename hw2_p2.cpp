@@ -1,3 +1,5 @@
+/*Authors : Sankalp Mittal (395001), Ilia Badanin (350775), Vasco Frazão (396229)*/
+
 #include <iostream>
 #include <algorithm>
 #include <vector>
