@@ -255,12 +255,6 @@ int main()
         }
         mt19937 gen(seed++); 
         shuffle(switches.begin(),switches.end(),gen);
-
-        // cout<<"Testing No."<<num_runs<<endl;
-        // for(int i=0;i<d;i++){
-        //     cout<<switches[i]<<" ";
-        // }
-        // cout<<endl;
         
         vector<int> q(d);
         q = z;
@@ -277,12 +271,6 @@ int main()
             int w = (int)ceil(c*r) + 1 - dist;
             shuffle(leftOvers.begin(),leftOvers.end(),gen);
 
-            // cout<<"In loop"<<endl;
-            // for(int i=0;i<leftOvers.size();i++){
-            //     cout<<leftOvers[i]<<" ";
-            // }
-            // cout<<endl;
-
             vector<vector<int>> u(w,q); // container for u's
             for(int i=0;i<w;i++){
                 for(int j=0;j<=i;j++){
@@ -298,22 +286,11 @@ int main()
                 query_ans = ds.query(u[j_star]);
             }
 
-            // cout<<j_star<<endl;
             q[leftOvers[j_star]] = 1 - q[leftOvers[j_star]];
             dist++;
             leftOvers.erase(leftOvers.begin()+j_star);
 
-            // for(int i=0;i<d;i++){
-            //     cout<<q[i]<<" ";
-            // }
-            // cout<<endl;
-
             a = ds.query(q);
-
-            // for(int i=0;i<d;i++){
-            //     cout<<a[i]<<" ";
-            // }
-            // cout<<endl;
         }
         if(a[0]==-1 && hammingDist(z,q,d)<=r){
             ans = q;
@@ -321,10 +298,6 @@ int main()
         }
 
     }
-
-    /* example of interaction with the data structure */
-    // vector<int> a;
-    // a = ds.query(z);
 
     /* report solution */
     reportSolution(ans, d);
